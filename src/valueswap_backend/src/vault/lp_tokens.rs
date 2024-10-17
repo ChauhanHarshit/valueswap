@@ -1,7 +1,9 @@
 use candid::Principal;
+use ic_cdk::api::call;
 use ic_cdk_macros::{query, update};
 use std::cell::{Ref, RefCell};
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{btree_map, BTreeMap, HashMap};
+use ic_cdk::{ api,  call,};
 
 use crate::api::deposit::deposit_tokens;
 use crate::api::transfer::icrc1_transfer;
@@ -11,21 +13,24 @@ use crate::with_state;
 
 thread_local! {
     static TOTAL_LP_SUPPLY : RefCell<f64> = RefCell::new(0.0);
-    static POOL_LP_SHARE : RefCell<HashMap<String , f64>> = RefCell::new(HashMap::new());
+    static POOL_LP_SHARE : RefCell<BTreeMap<String , f64>> = RefCell::new(BTreeMap::new());
     static USERS_LP : RefCell<BTreeMap<Principal, f64>> = RefCell::new(BTreeMap::new());
 }
 
 // To map pool with their LP tokens
 #[update]
-pub fn increase_pool_lp_tokens(params: Pool_Data) -> HashMap<String, f64> {
-    POOL_LP_SHARE.with(|lp_share| { 
+pub fn increase_pool_lp_tokens(params: Pool_Data) {
+    POOL_LP_SHARE.with(|lp_share| {
+        let mut borrowed_lp_share = lp_share.borrow_mut();
+
+        // Calculate the pool's total value (sum of value * balance for each token in the pool)
         let pool_supply: f64 = params
             .pool_data
             .iter()
-            .map(|pool| pool.value.clone() as f64 * pool.balance.clone() as f64)
+            .map(|pool| pool.value as f64 * pool.balance as f64)
             .sum();
 
-        // let key: String = params.token_names.join("");
+        // Create a unique key for the pool using the token names (concatenate token names)
         let key: String = params
             .pool_data
             .iter()
@@ -33,18 +38,21 @@ pub fn increase_pool_lp_tokens(params: Pool_Data) -> HashMap<String, f64> {
             .collect::<Vec<String>>()
             .join("");
 
-        lp_share.borrow_mut().insert(key, pool_supply);
+        // If the pool already exists, add the new pool supply; otherwise, insert a new entry
+        borrowed_lp_share
+            .entry(key)
+            .and_modify(|existing_supply| *existing_supply += pool_supply / 10.0)
+            .or_insert(pool_supply / 10.0);
     });
-
-    POOL_LP_SHARE.with(|lp_share| lp_share.borrow().clone())
 }
+
 
 // To get all lp tokens
 #[update]
 fn total_lp_tokens() {
     let mut total_supply: f64 = 0.0;
     POOL_LP_SHARE.with(|share| {
-        let temp: HashMap<String, f64> = share.borrow().clone();
+        let temp: BTreeMap<String, f64> = share.borrow().clone();
         for (_key, value) in temp.iter() {
             total_supply += value;
         }
@@ -53,7 +61,7 @@ fn total_lp_tokens() {
 
     TOTAL_LP_SUPPLY.with(|lp_supply| *lp_supply.borrow_mut() = total_supply);
 }
-
+ 
 #[query]
 fn get_total_lp() -> f64 {
     TOTAL_LP_SUPPLY.with(|total_lp| total_lp.borrow().clone())
@@ -63,7 +71,7 @@ fn get_total_lp() -> f64 {
 #[query]
 fn get_lp_tokens(pool_name: String) -> Option<f64> {
     POOL_LP_SHARE.with(|share| {
-        let temp: HashMap<String, f64> = share.borrow().clone();
+        let temp: BTreeMap<String, f64> = share.borrow().clone();
         if let Some(key) = temp.get(&pool_name) {
             Some(*key)
         } else {
@@ -109,7 +117,7 @@ fn get_users_lp(user_id: Principal) -> Option<f64> {
 }
 
 #[update]
-async fn burn_lp_tokens(pool_name : String , amount : f64){
+async fn burn_lp_tokens(pool_name : String , amount : f64) -> Result<() , String>{
     let user = ic_cdk::caller();
     let ledger_canister_id = Principal::from_text(LP_LEDGER_ADDRESS).expect("Invalid ledger canister id");
     let target_canister_id = ic_cdk::id();
@@ -125,10 +133,53 @@ async fn burn_lp_tokens(pool_name : String , amount : f64){
         pool_borrowed.get(&pool_name).map(|user_principal| user_principal.principal)
     });
     
-    // calculate the amount of tokens to be transferred to the user
+    let canister_id = match canister_id {
+        Some(id) => id,
+        None => ic_cdk::trap(&format!("No canister ID found for the pool")),
+    };
+
+    let pool_total_lp = POOL_LP_SHARE.with(|share| {
+        let borrowed_share = share.borrow();
+        borrowed_share.get(&pool_name).cloned().unwrap_or(0.0)
+    });
+
+    if pool_total_lp <= 0.0 {
+        ic_cdk::trap(&format!("No LP tokens in the pool: {}", pool_name));
+    }
+
+    let user_share_ratio = amount / pool_total_lp;
+
+    let pool_value: f64 = POOL_LP_SHARE.with(|pool_lp|{
+        let borrowed_pool_lp = pool_lp.borrow();
+        if let Some(&lp_value) = borrowed_pool_lp.get(&pool_name){
+            lp_value * 10.0
+        }else{
+            0.0
+        }
+    });
+
+    if pool_value <= 0.0 {
+        ic_cdk::trap(&format!("No tokens in the pool: {}", pool_name));
+    }
+
+    let tokens_to_transfer = pool_value * user_share_ratio;
+
+    let result: Result<(), String> = call(
+        canister_id,
+        "burn_tokens",
+        (user , user_share_ratio),
+    )
+    .await
+    .map_err(|e| format!("Failed to perform swap: {:?}", e));
+
+    // if let Err(e) = result {
+    //     return Err(e);
+    // }
+
 
     decrease_pool_lp(pool_name ,amount);
     decrease_total_lp(amount);
+    Ok(())
 }
 
 #[update]
