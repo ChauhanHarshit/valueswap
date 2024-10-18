@@ -16,7 +16,8 @@ pub use api::transfer::*;
 
 thread_local! {
     pub static POOL_DATA: RefCell<BTreeMap<Principal, Vec<Pool_Data>>> = RefCell::new(BTreeMap::new());
-    pub static LP_SHARE : RefCell<BTreeMap<Principal , f64>> = RefCell::new(BTreeMap::new());
+    // pub static LP_SHARE : RefCell<BTreeMap<Principal , f64>> = RefCell::new(BTreeMap::new());
+    pub static POOL_BALANCE : RefCell<BTreeMap<Principal , u64>> = RefCell::new(BTreeMap::new());
 }
 
 // #[update]
@@ -36,6 +37,32 @@ thread_local! {
 //     TOTAL_LP.with(|lp|{ lp.borrow().clone()})
 // }
 
+#[update]
+pub fn pool_balance(user_principal : Principal ,params : Pool_Data) {
+    let balance : u64 = params
+    .pool_data
+    .iter()
+    .map(|pool| pool.balance.clone())
+    .sum();
+
+    POOL_BALANCE.with(|pool_balance|{
+        let mut borrowed_pool_balance = pool_balance.borrow_mut();
+        borrowed_pool_balance.entry(user_principal)
+        .and_modify(|user_balance| *user_balance += balance)
+        .or_insert(balance);
+    })
+}
+
+pub fn get_pool_balance(user_principal : Principal) -> Option<u64> {
+    POOL_BALANCE.with(|pool_balance|{
+        let borrowed_pool_balance = pool_balance.borrow();
+        if let Some(balance) = borrowed_pool_balance.get(&user_principal){
+            Some(balance.clone())
+        }else{
+            None
+        }
+    })
+}
 
 
 // store user_id with pool data
@@ -44,6 +71,7 @@ async fn store_pool_data(user_principal: Principal, params: Pool_Data) -> Result
     // let key = format!("{},{}", pool_name, params.swap_fee);
     let key = user_principal;
     // increase_total_lp(params.clone());
+    pool_balance(user_principal.clone(), params.clone());
 
     POOL_DATA.with(|pool_data| {
         let mut pool_data_borrowed = pool_data.borrow_mut();
@@ -66,6 +94,7 @@ async fn add_liquidity_to_pool(user_principal: Principal, params: Pool_Data) -> 
         .join("");
 
     // increase_total_lp(params.clone());
+    pool_balance(user_principal.clone(), params.clone());
 
     // let key = format!("{},{}", pool_name, params.swap_fee);
 
@@ -87,6 +116,24 @@ async fn add_liquidity_to_pool(user_principal: Principal, params: Pool_Data) -> 
     Ok(())
 }
 
+
+async fn burn_tokens(params : Pool_Data , user : Principal , user_share_ratio : f64) -> Result<(), String> {
+    let total_token_balance = match get_pool_balance(user.clone()){
+        Some(balance) => balance,
+        None => 0
+    };
+
+    for token in params.pool_data.iter(){
+        let token_amount = token.weight as u64 * total_token_balance;
+        let transfer_result = icrc1_transfer(token.ledger_canister_id , user , token_amount).await;
+
+        if let Err(e) = transfer_result{
+            ic_cdk::println!("Transfer failed {:}", e );
+            return Err("Token transfer failed" . to_string());
+        }
+    }
+    Ok(())
+}
 
 
 
@@ -208,10 +255,5 @@ async fn swap( user_principal : Principal , params: SwapParams , amount : f64) -
 //         return Ok(swap_amount);
 //     }
 // }
-
-#[query]
-fn function() -> String{
-    "hello".to_string()
-}
 
 export_candid!();

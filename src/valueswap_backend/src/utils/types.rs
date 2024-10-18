@@ -245,3 +245,11 @@ pub struct SwapParams {
     pub token2_name : String,
     pub ledger_canister_id : Principal
 }
+
+
+// #[derive(CandidType , Deserialize , Serialize , Clone)]
+
+// pub struct user_data {
+//     pool_name : String,
+
+// }

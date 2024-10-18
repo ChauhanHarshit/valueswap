@@ -2,7 +2,7 @@ use candid::Principal;
 use ic_cdk::api::call;
 use ic_cdk_macros::{query, update};
 use std::cell::{Ref, RefCell};
-use std::collections::{btree_map, BTreeMap, HashMap};
+use std::collections::{ BTreeMap, HashMap};
 use ic_cdk::{ api,  call,};
 
 use crate::api::deposit::deposit_tokens;
@@ -15,6 +15,7 @@ thread_local! {
     static TOTAL_LP_SUPPLY : RefCell<f64> = RefCell::new(0.0);
     static POOL_LP_SHARE : RefCell<BTreeMap<String , f64>> = RefCell::new(BTreeMap::new());
     static USERS_LP : RefCell<BTreeMap<Principal, f64>> = RefCell::new(BTreeMap::new());
+    static USERS_POOL : RefCell<BTreeMap<Principal , Vec<String>>> = RefCell::new(BTreeMap::new());
 }
 
 // To map pool with their LP tokens
@@ -46,6 +47,30 @@ pub fn increase_pool_lp_tokens(params: Pool_Data) {
     });
 }
 
+
+pub fn users_pool(params : Pool_Data) { 
+    let user = ic_cdk::caller();
+
+    USERS_POOL.with(|pool|{
+        let mut pool = pool.borrow_mut();
+
+        let new_pool: String = params
+            .pool_data
+            .iter()
+            .map(|pool| pool.token_name.clone())
+            .collect::<Vec<String>>()
+            .join("");
+
+            pool.entry(user)
+            .and_modify(|user_pools| {
+                // If the user exists, only push the new pool if it doesn't already exist
+                if !user_pools.contains(&new_pool) {
+                    user_pools.push(new_pool.clone());
+                }
+            })
+            .or_insert_with(|| vec![new_pool]);
+    });
+}
 
 // To get all lp tokens
 #[update]
@@ -117,7 +142,7 @@ fn get_users_lp(user_id: Principal) -> Option<f64> {
 }
 
 #[update]
-async fn burn_lp_tokens(pool_name : String , amount : f64) -> Result<() , String>{
+async fn burn_lp_tokens(params : Pool_Data, pool_name : String , amount : f64) -> Result<() , String>{
     let user = ic_cdk::caller();
     let ledger_canister_id = Principal::from_text(LP_LEDGER_ADDRESS).expect("Invalid ledger canister id");
     let target_canister_id = ic_cdk::id();
@@ -167,7 +192,7 @@ async fn burn_lp_tokens(pool_name : String , amount : f64) -> Result<() , String
     let result: Result<(), String> = call(
         canister_id,
         "burn_tokens",
-        (user , user_share_ratio),
+        (params , user , user_share_ratio),
     )
     .await
     .map_err(|e| format!("Failed to perform swap: {:?}", e));
