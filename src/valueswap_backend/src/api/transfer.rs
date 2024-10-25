@@ -3,6 +3,7 @@ use asset_address::LP_LEDGER_ADDRESS;
 use ic_cdk::api::call::call;
 use candid::{CandidType, Deserialize, Nat, Principal};
 use ic_cdk_macros::update;
+use ic_cdk::api::id;
 
 use crate::constants::*;
 
@@ -33,6 +34,7 @@ enum TransferResult {
 pub async fn icrc1_transfer( user_principal: Principal, amount: u64) -> Result<Nat, String> {
     // Define the parameters for the ICRC2 transfer call
     let canister_id = Principal::from_text(LP_LEDGER_ADDRESS).expect("Invalid ledger canister ID");
+    // let canister_id = id();
     let amount_as_u64 = amount * 100000000;
     let amount_nat = Nat::from(amount_as_u64);
     let args = TransferArg {

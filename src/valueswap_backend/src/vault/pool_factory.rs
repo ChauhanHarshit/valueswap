@@ -10,7 +10,7 @@ use std::{cmp, result};
 use std::collections::{BTreeMap, HashMap};
 // use std::simd::cmp;
 use core::cmp::max;
-// use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use ic_cdk::{
     api,
     api::{
@@ -60,7 +60,7 @@ async fn create_pools(params: Pool_Data) -> Result<(), String> {
         if let Some(canister_id) = pool_borrowed.get(&pool_name) {
             return Some(canister_id);
         } else {
-            None
+               None
         }
     });
 
@@ -69,6 +69,7 @@ async fn create_pools(params: Pool_Data) -> Result<(), String> {
         add_liquidity(params.clone(), canister_id.principal);
         users_pool(params.clone());
         increase_pool_lp_tokens(params.clone());
+        users_lp_share(principal_id.clone(), params.clone());
         for amount in params.pool_data.iter() {
             // Deposit tokens to the newly created canister
             // ic_cdk::println!("canister_id.principal{:}",canister_id.principal);

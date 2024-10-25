@@ -53,10 +53,13 @@ type SwapParams = record {
 service : () -> {
   add_liquidity : (Pool_Data, principal) -> (Result);
   add_liquidity_curr : (Pool_Data) -> (Result);
+  burn_lp_tokens : (Pool_Data, text, float64) -> (Result);
   compute_swap : (SwapParams) -> (Result);
   create : () -> (Result_1);
   create_canister : (CreateCanisterArgument) -> (Result_2);
   create_pools : (Pool_Data) -> (Result);
+  decrease_pool_lp : (text, float64) -> ();
+  decrease_total_lp : (float64) -> ();
   deposit_tokens : (nat64, principal, principal) -> (Result_3);
   get_constant_product_value : () -> (float64) query;
   get_exchange_rates : () -> (Result_4);
@@ -66,12 +69,16 @@ service : () -> {
   get_specific_pool_data : (text) -> (Result_5) query;
   get_tokens : () -> (vec record { text; PoolShare }) query;
   get_total_lp : () -> (float64) query;
+  get_user_share_ratio : (Pool_Data, text, float64) -> (Result) query;
   get_users_lp : (principal) -> (opt float64) query;
-  increase_lp_tokens : (Pool_Data) -> (vec record { text; float64 });
+  get_users_pool : (principal) -> (opt vec text) query;
+  icrc1_transfer : (principal, nat64) -> (Result_3);
+  increase_pool_lp_tokens : (Pool_Data) -> ();
   pre_compute_swap : (SwapParams) -> (text, float64) query;
   search_swap_pool : (SwapParams) -> (Result_6);
   store_pool_data : (Pool_Data, principal) -> (Result);
   store_pool_data_curr : (Pool_Data) -> (Result);
   total_lp_tokens : () -> ();
-  users_lp_share : (principal, Pool_Data) -> ();
+  users_lp_share : (principal, Pool_Data) -> (Result);
+  users_pool : (Pool_Data) -> ();
 }

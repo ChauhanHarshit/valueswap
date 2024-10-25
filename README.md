@@ -17,6 +17,10 @@ If you want to start working on your project right away, you might want to try t
 
 ```bash
 cd valueswap/
+cd scripts
+./LP_ledger.sh
+cd local_deploy
+./deploy_ckbtc.sh
 dfx help
 dfx canister --help
 ```
@@ -24,6 +28,12 @@ dfx canister --help
 ## Running the project locally
 
 If you want to test your project locally, you can use the following commands:
+
+cd valueswap/
+cd scripts
+./LP_ledger.sh
+cd local_deploy
+./deploy_ckbtc.sh
 
 ```bash
 # Starts the replica, running in the background

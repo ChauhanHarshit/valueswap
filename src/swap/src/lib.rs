@@ -116,7 +116,7 @@ async fn add_liquidity_to_pool(user_principal: Principal, params: Pool_Data) -> 
     Ok(())
 }
 
-
+#[query]
 async fn burn_tokens(params : Pool_Data , user : Principal , user_share_ratio : f64) -> Result<(), String> {
     let total_token_balance = match get_pool_balance(user.clone()){
         Some(balance) => balance,
@@ -124,8 +124,9 @@ async fn burn_tokens(params : Pool_Data , user : Principal , user_share_ratio : 
     };
 
     for token in params.pool_data.iter(){
-        let token_amount = token.weight as u64 * total_token_balance;
-        let transfer_result = icrc1_transfer(token.ledger_canister_id , user , token_amount).await;
+        let token_amount = token.weight * total_token_balance as f64;
+        let token_amount_u64 = token_amount as u64;
+        let transfer_result = icrc1_transfer(token.ledger_canister_id , user , token_amount_u64).await;
 
         if let Err(e) = transfer_result{
             ic_cdk::println!("Transfer failed {:}", e );
@@ -135,6 +136,24 @@ async fn burn_tokens(params : Pool_Data , user : Principal , user_share_ratio : 
     Ok(())
 }
 
+
+#[query]
+async fn get_burned_tokens(params : Pool_Data , user : Principal , user_share_ratio : f64) -> Vec<f64> {
+    let total_token_balance = match get_pool_balance(user.clone()){
+        Some(balance) => balance,
+        None => 0
+    };
+
+    let mut result : Vec<f64> = vec![];
+    for token in params.pool_data.iter(){
+        let token_amount = token.weight as u64 * total_token_balance;
+        
+        
+        let transfer_amount = user_share_ratio * token_amount as f64;
+        result.push(transfer_amount);
+    }
+    result
+}
 
 
 // fn pre_swap(params: SwapParams) -> Result<(), SwapError> {

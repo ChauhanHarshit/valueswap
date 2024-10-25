@@ -20,7 +20,11 @@
         }
       }
     },
-
+    "LP_ledger_canister": {
+      "type": "custom",
+      "candid": "src/LP_ledger_canister/icrc1.did",
+      "wasm": "src/LP_ledger_canister/icrc1_wasm.gz"
+    },
     "xrc": {
       "type": "custom",
       "candid": "https://raw.githubusercontent.com/THLO/xrc_demo/refs/heads/main/xrc/xrc.did",

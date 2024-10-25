@@ -160,3 +160,25 @@ pub async fn get_exchange_rates() -> Result<(f64, u64), String>  {
 
 
 // the function above is just an sample function, deposit function will use validation logic, reserve logic and other checks according to aave
+
+
+// #[ic_cdk_macros::update]
+// pub async fn deposit_LP(amount: u64, ledger_canister_id: Principal , target_canister_id: Principal) -> Result<Nat, String> {
+
+//     let user_principal = ic_cdk::api::caller();
+
+//     let lp_
+//     // Use the dynamically passed target canister principal
+//     let target_canister = target_canister_id;
+//     ic_cdk::println!("Target canister principal for deposit {}", target_canister);
+//     ic_cdk::println!("amount{:}", amount.clone());
+//     let amount_nat = Nat::from(amount * 100000000);
+//     ic_cdk::println!("amount_nat{:}", amount_nat.clone());
+//     transfer_from(
+//         ledger_canister_id,
+//         target_canister,
+//         user_principal,
+//         amount_nat,
+//     )
+//     .await
+// }
