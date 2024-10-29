@@ -294,5 +294,3 @@ fn decrease_total_lp(LP: f64) {
         }
     })
 }
-
-#
