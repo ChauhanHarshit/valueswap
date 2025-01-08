@@ -3,14 +3,13 @@
 set -e
 
 # Create and use the DevJourney identity
-dfx identity new DevJourney || true
-dfx identity use DevJourney
+# dfx identity new DevJourney || true
+# dfx identity use DevJourney
 
-export MINTER="ssvsn-2iaaa-aaaal-amg5a-cai"
+export MINTER="iuem3-hyaaa-aaaac-aadaq-cai"
 echo "MINTER principal (backend canister): $MINTER"
 
 # Get the principal ID for the minter account
-export MINTER=$(dfx identity get-principal)
 echo "MINTER principal: $MINTER"
 
 # Set token details
@@ -24,8 +23,8 @@ export PRE_MINTED_TOKENS=10_000_000_000
 export TRANSFER_FEE=10_000
 
 # Switch to the default identity and get its principal ID
-dfx identity use DevJourney
-export DEFAULT=$(dfx identity get-principal)
+dfx identity use DevJourney --network ic
+export DEFAULT=$(dfx identity get-principal --network ic)
 echo "DEFAULT principal: $DEFAULT"
 
 # Set archive controller as the default identity for now
@@ -37,7 +36,7 @@ export NUM_OF_BLOCK_TO_ARCHIVE=1000
 export CYCLE_FOR_ARCHIVE_CREATION=10000000000000
 export FEATURE_FLAGS=true
 
-# Deploy the cketh_ledger canister with the specified initialization arguments
+# Deploy the cketh canister with the specified initialization arguments
 DEPLOY_ARGUMENTS="(variant {Init = record {
   token_symbol = \"${TOKEN_SYMBOL}\";
   token_name = \"${TOKEN_NAME}\";
@@ -55,7 +54,11 @@ DEPLOY_ARGUMENTS="(variant {Init = record {
 }})"
 echo "Deploy arguments: $DEPLOY_ARGUMENTS"
 
-dfx deploy LP_ledger_canister --argument "$DEPLOY_ARGUMENTS" 
+<<<<<<< HEAD
+dfx deploy LP_ledger_canister --argument "$DEPLOY_ARGUMENTS" --network ic --no-wallet
+=======
+dfx deploy LP_ledger_canister --argument "$DEPLOY_ARGUMENTS" --network ic
+>>>>>>> 26ad3fc (add faucet)
 
 echo "LP ledger got deployed"
 

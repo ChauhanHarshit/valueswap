@@ -40,16 +40,16 @@ function SwapSetting() {
 
 
     return (
-        <div className='w-full bg-[#05071D] h-fit z-50 rounded-lg border border-[#FFFFFF80] relative'>
-            <h1 className='font-fahkwang text-3xl font-light text-center py-4'>Settings</h1>
+        <div className='w-full  h-fit z-50  ext-[#A3A3A3] bg-gray-700 bg-clip-padding backdrop-filter backdrop-blur-md bg-opacity-20 border  border-[#FFFFFF66] rounded-2xl relative'>
+            <h1 className='font-gilroy text-3xl font-light text-center py-4'>Settings</h1>
             {showTooltip && (
-                <div className='absolute right-1 top-6 p-4 bg-[#010427] w-[312px] z-50'>
+                <div className='absolute right-1 top-6 p-4 bg-gray-700 w-[312px] z-50'>
                     <p className=''>Your Transaction will be roll backed if the price changes by more then choosen tolerance percentage</p>
                 </div>
             )}
             <div className='h-[1px] w-full bg-custom-radial ' />
             <div className='flex flex-col items-start justify-start p-4 '>
-                <h1 className='text-2xl font-cabin font-medium pb-3'>Transaction Settings</h1>
+                <h1 className='text-2xl font-gilroy font-medium pb-3'>Transaction Settings</h1>
 
 
                 <div className='flex gap-1 md:flex-row flex-col  md:justify-between w-full items-center gap-y-5 pb-4'>
@@ -66,16 +66,16 @@ function SwapSetting() {
                     </div>
                     <div className='flex items-start w-full md:justify-end gap-x-4'>
                         {/* buttons */}
-                        <button className='h-[40px] w-[87px] button-gradient-wrapper text-white font-[400] text-base font-cabin rounded-lg py-4 px-[1.875rem] hover:opacity-50'><span className="button-gradient-content flex justify-center items-center p-1 ">
+                        <button className='h-[40px] w-[87px] button-gradient-wrapper text-white font-[400] text-base font-gilroy rounded-lg py-4 px-[1.875rem] hover:opacity-50'><span className="button-gradient-content flex justify-center items-center p-1 ">
                             Auto
                         </span></button>
-                        {/* <button className={` h-[39px] w-[92px] button-gradient-wrapper text-white font-[400] text-base font-cabin rounded-lg py-4 px-[1.875rem] hover:opacity-50`} onClick={handleShowInput}>
+                        {/* <button className={` h-[39px] w-[92px] button-gradient-wrapper text-white font-[400] text-base font-gilroy rounded-lg py-4 px-[1.875rem] hover:opacity-50`} onClick={handleShowInput}>
                             <span className="button-border-gradient-content flex justify-center items-center">
                                 Custom
                             </span>
                         </button> */}
                             <div  onClick={handleShowInput}>
-                        <BorderGradientButton customCss={`bg-[#05071D] h-[38px] md:h-[38px]`}>
+                        <BorderGradientButton customCss={`bg-gray-700 h-[38px] md:h-[38px]`}>
                             Custom
                         </BorderGradientButton>
                             </div>
@@ -90,9 +90,9 @@ function SwapSetting() {
                     )
                 }
                 <div className='flex flex-col md:flex-row gap-1 justify-between w-full items-center  pb-4'>
-                    <div className='flex gap-x-1 pb-4 w-full justify-between md:justify-normal'>
+                    <div className='flex gap-x-1 pb-4 w-full justify-between md:justify-normal'  onMouseEnter={handleMouseEnterInfo2} onMouseLeave={handleMouseLeaveInfo2} onClick={() => setShowTooltip2(!showTooltip2)}>
                         <h3 >Transaction Validity</h3>
-                        <div onMouseEnter={handleMouseEnterInfo2} onMouseLeave={handleMouseLeaveInfo2} onClick={() => setShowTooltip2(!showTooltip2)}>
+                        <div id='valid'>
 
                             <InfoOutlinedIcon sx={{ color: '#FFFFFFBF' }} />
                         </div>
@@ -101,12 +101,12 @@ function SwapSetting() {
                     <div className='flex gap-x-3 items-center justify-start md:justify-end w-full md:w-fit'>
                         {/* buttons */}
 
-                        {/* <div className={` h-[39px] w-[59px] button-gradient-wrapper text-white font-[400] text-base font-cabin rounded-lg py-4 px-[1.875rem] hover:opacity-50`}>
+                        {/* <div className={` h-[39px] w-[59px] button-gradient-wrapper text-white font-[400] text-base font-gilroy rounded-lg py-4 px-[1.875rem] hover:opacity-50`}>
                            
 
                         </div> */}
-                         <BorderGradientButton customCss={`bg-[#010427] h-[38px] md:h-[38px] `}>
-                         <input type='number' maxLength="3" className=" bg-[#010427] flex w-8 justify-center items-center appearance-none	outline-none text-center" />
+                         <BorderGradientButton customCss={` h-[38px] md:h-[38px] bg-gray-700 `}>
+                         <input type='number' maxLength="3" className=" bg-gray-700 flex w-8 justify-center items-center appearance-none	outline-none text-center" />
 
                          </BorderGradientButton>
                         <div >minutes</div>
@@ -115,7 +115,7 @@ function SwapSetting() {
 
             </div>
             {showTooltip2 && (
-                <div className='absolute right-1 bottom-2 sm:bottom-6 p-4 bg-[#010427] w-[312px] z-50'>
+                <div className='absolute right-1 bottom-2 sm:bottom-6 p-4 bg-gray-700 w-[312px] z-50'>
                     <p className=''>Your Transaction will be roll backed if it is pending for more then this time.</p>
                 </div>
             )}

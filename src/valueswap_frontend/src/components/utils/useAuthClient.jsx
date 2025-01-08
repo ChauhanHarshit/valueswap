@@ -4,7 +4,7 @@
 //     createActor as createActorBackend, 
 // } from '../../../../declarations/valueswap_backend/index';
 // // import { Actor, HttpAgent } from "@dfinity/agent";
-// import { createActor as ledgerActor, idlFactory as TokenIdl} from "../../../../declarations/ckbtc_ledger/index"
+// import { createActor as ledgerActor, idlFactory as TokenIdl} from "../../../../declarations/ckbtc/index"
 
 
 // const AuthContext = createContext();
@@ -146,7 +146,7 @@
 //             }
         
 
-//     const canisterId = process.env.CANISTER_ID_CKETH_LEDGER
+//     const canisterId = process.env.CANISTER_ID_CKETH
 
 //     // const actor = createActorBackend(canisterId, { agentOptions: { identity } });
 
@@ -188,7 +188,7 @@
 
 
 
-
+// plug integration
 
 import { AuthClient } from "@dfinity/auth-client";
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
@@ -196,9 +196,12 @@ import { HttpAgent } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import { createActor as createActorBackend, idlFactory } from '../../../../declarations/valueswap_backend/index';
 import { PlugLogin, StoicLogin, NFIDLogin, IdentityLogin } from "ic-auth";
-import { createActor as ledgerActor, idlFactory as TokenIdl } from "../../../../declarations/ckbtc_ledger/index";
-import {  idlFactory as ckETHIdlFactory } from "../../../../declarations/cketh_ledger/index";
+import { createActor as ledgerActor, idlFactory as TokenIdl } from "../../../../declarations/ckbtc/index";
+import {  idlFactory as ckETHIdlFactory } from "../../../../declarations/cketh/index";
 import { DummyDataTokens } from '../../TextData';
+// import { PlugMobileProvider } from '@funded-labs/plug-mobile-sdk'
+
+
 const AuthContext = createContext();
 
 export const useAuthClient = () => {
@@ -209,11 +212,16 @@ export const useAuthClient = () => {
   const [backendActor, setBackendActor] = useState(null);
   const [balance, setBalance] = useState(null);
   const [provider, setProvider] = useState(null); // Keep track of the provider
-
+  // const isMobile = PlugMobileProvider.isMobileBrowser()
+  
   useEffect(() => {
+
     AuthClient.create().then((client) => {
       setAuthClient(client);
     });
+
+    
+   
   }, []);
 
   useEffect(() => {
@@ -229,16 +237,15 @@ export const useAuthClient = () => {
     }
     try {
       setProvider(selectedProvider); // Set the provider
-      const tokenCanisterIds = DummyDataTokens.Tokens.map(token => token.CanisterId);
+    
       const additionalCanisterIds = [
-        process.env.CANISTER_ID_CKBTC_LEDGER,
-        process.env.CANISTER_ID_CKETH_LEDGER
+        process.env.CANISTER_ID_CKBTC,
+        process.env.CANISTER_ID_CKETH
       ];
 
       // Combine all canister IDs
       const whitelist = [
         process.env.CANISTER_ID_VALUESWAP_BACKEND,
-        ...tokenCanisterIds,
         ...additionalCanisterIds
       ];
 
@@ -247,7 +254,32 @@ export const useAuthClient = () => {
 
       if (selectedProvider === "plug") {
         // Plug login
-  
+        // if (isMobile) {
+        //   const provider = new PlugMobileProvider({
+        //     debug: true, // If you want to see debug logs in console
+        //     walletConnectProjectId: '6e2de4a3633b8ad436730aea43901ef3', // Project ID from WalletConnect console
+        //     window: window,
+        //   })
+        //   // setProvider(provider)
+        //   provider.initialize().catch(console.log)
+        //   setProvider(provider)
+
+        //   if (!provider.isPaired()) {
+        //     provider.pair().catch(console.log)
+        //   }
+
+         
+        //     const agent = await provider.createAgent({
+        //       host: 'https://icp0.io',
+        //       targets: [whitelist], // List of canister you are planning to call
+        //     })
+        
+        // const backendActor = createActorBackend(process.env.CANISTER_ID_VALUESWAP_BACKEND, {agent:agent});
+        // const principal = agent.getPrincipal()
+        // setBackendActor(backendActor);
+        // setPrincipal(principal);
+        // setIsAuthenticated(true);
+        // }
         // Collect all canister IDs you need to whitelist
        
         // Ensure all canister IDs are valid
@@ -346,7 +378,8 @@ export const useAuthClient = () => {
         const userObject = await StoicLogin();
         const identity =   userObject.agent._identity; 
         // console.log("identity", StoicLogin())// StoicLogin returns identity
-        const principal = await identity._principal;
+        const principal = await userObject.principal;
+        console.log("principal stoic", principal, userObject)
         setPrincipal(principal); // Store the Principal object
         setIdentity(identity);
         setIsAuthenticated(true);
@@ -471,9 +504,9 @@ export const useAuthClient = () => {
       try {
         // Assuming you have a function to create an actor for other providers
         const actor = await createTokenActor(canisterId);
-        console.log("actoir hai", actor)
+  
         const ownerPrincipal = typeof principal === 'string' ? Principal.fromText(principal) : principal;
-        console.log("princes",  principal)
+     
         const balance = await actor?.icrc1_balance_of({ owner: ownerPrincipal,  subaccount: []});
         console.log("Balance:", balance.toString());
         return balance;
@@ -530,14 +563,14 @@ export const useAuth = () => useContext(AuthContext);
 // import React, { createContext, useContext, useEffect, useState } from "react";
 // import { PlugLogin, StoicLogin, NFIDLogin, IdentityLogin, Types, CreateActor } from 'ic-auth';
 // // import { idlFactory,createActor} from "../../declarations/loginme_backend/index";
-// import { createActor, idlFactory } from "../../../../declarations/ckbtc_ledger/index"
+// import { createActor, idlFactory } from "../../../../declarations/ckbtc/index"
 // import { Principal } from "@dfinity/principal";
 // import { AuthClient } from "@dfinity/auth-client";
 // import { Actor } from "@dfinity/agent";
 
 // const AuthContext = createContext();
-// const canisterID = process.env.CANISTER_ID_CKBTC_LEDGER;
-// const whitelist = [process.env.CANISTER_ID_CKBTC_LEDGER];
+// const canisterID = process.env.CANISTER_ID_CKBTC;
+// const whitelist = [process.env.CANISTER_ID_CKBTC];
 
 // export const useAuthClient = () => {
 //     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -588,7 +621,7 @@ export const useAuth = () => useContext(AuthContext);
 //             const identity = await userObject?.agent?._identity;
 //             const principal = Principal.fromText(userObject?.principal);
            
-//             // const ledgerActor = Actor.createActor(ledgerIdl, { userObject.agent, canisterId: process.env.CANISTER_ID_CKBTC_LEDGER });
+//             // const ledgerActor = Actor.createActor(ledgerIdl, { userObject.agent, canisterId: process.env.CANISTER_ID_CKBTC });
 //             setUserObjects(userObject)
 //             setIsAuthenticated(true);
 //             setPrincipal(principal);
@@ -662,4 +695,118 @@ export const useAuth = () => useContext(AuthContext);
 //     return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
 // };
 // // 
+// export const useAuth = () => useContext(AuthContext);
+
+
+
+
+
+
+
+// import { useIdentityKit } from '@nfid/identitykit/react';
+// import React, { createContext, useContext, useState, useEffect } from 'react';
+// import { createActor as createActorBackend, idlFactory } from '../../declarations/h1_backend/index';
+// import { Actor } from '@dfinity/agent';
+
+// const AuthContext = createContext();
+
+// export const useAuthClient = () => {
+//   const { agent } = useIdentityKit();
+//   const {
+//     isInitializing,
+//     user,
+//     isUserConnecting,
+//     icpBalance,
+//     signer,
+//     identity,
+//     delegationType,
+//     accounts,
+//     connect,
+//     disconnect,
+//     fetchIcpBalance,
+//   } = useIdentityKit();
+
+//   const [userAuthenticated, setUserAuthenticated] = useState(false);
+//   const [principal, setPrincipal] = useState(null);
+//   const [backendActor, setBackendActor] = useState(null);
+//   const [balance, setBalance] = useState(null);
+
+//   const login = async () => {
+//     await connect();
+//     if (user) {
+//       setUserAuthenticated(true);
+//       setPrincipal(identity?._principal.toString());
+//     } else {
+//       setUserAuthenticated(false);
+//     }
+//   };
+
+//   const logout = () => {
+//     disconnect();
+//     setUserAuthenticated(false);
+//   };
+
+//   // Initialize backend actor when agent or principal changes
+//   useEffect(() => {
+//     if (agent && process.env.CANISTER_ID_H1_BACKEND) {
+//       const newBackendActor =  Actor.createActor(idlFactory, {
+//         agent,
+//         canisterId: process.env.CANISTER_ID_H1_BACKEND,
+//       });
+//       setBackendActor(newBackendActor);
+//     }
+    
+//   }, []);
+
+//   const createTokenActor = async (canisterId) => {
+//     return Actor.createActor(idlFactory, {
+//       agent,
+//       canisterId: canisterId,
+//     });
+//   };
+
+//   const getBalance = async (canisterId) => {
+//     try {
+//       const tokenActor = await createTokenActor(canisterId);
+//       const balance = await tokenActor.icrc1_balance_of({ owner: principal, subaccount: [] });
+//       setBalance(balance);
+//       return balance;
+//     } catch (error) {
+//       console.error("Failed to fetch balance:", error);
+//       return null;
+//     }
+//   };
+
+
+//   return {
+//     isInitializing,
+//     isAuthenticated: user,
+//     isUserConnecting,
+//     icpBalance,
+//     signer,
+//     identity,
+//     delegationType,
+//     accounts,
+//     backendActor,
+//     createTokenActor,
+//     agent,
+//     login,
+//     logout,
+//     fetchIcpBalance,
+//     principal,
+//     getBalance,
+//     balance,
+//   };
+// };
+
+// export const AuthProvider = ({ children }) => {
+//   const auth = useAuthClient();
+
+//   return (
+//     <AuthContext.Provider value={auth}>
+//       {children}
+//     </AuthContext.Provider>
+//   );
+// };
+
 // export const useAuth = () => useContext(AuthContext);
